@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cutiedeekufy | For Deeksha</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;900&display=swap');
+        
+        :root { 
+            --spotify-green: #1DB954; 
+            --bg-base: #000000; 
+            --bg-elevated: #121212; 
+            --bg-highlight: #2a2a2a;
+            --text-subdued: #a7a7a7; 
+            --text-base: #ffffff; 
+        }
+
+        body { 
+            margin: 0; 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-base); 
+            color: var(--text-base); 
+            height: 100vh; 
+            overflow: hidden; 
+            user-select: none;
+        }
+
+        .wrapper { 
+            display: grid; 
+            grid-template-areas: "sidebar main" "player player"; 
+            grid-template-columns: 280px 1fr; 
+            grid-template-rows: 1fr 90px; 
+            height: 100vh; 
+            width: 100vw; 
+        }
+
+        /* Sidebar Branding */
+        .sidebar { grid-area: sidebar; background: var(--bg-base); padding: 8px; display: flex; flex-direction: column; gap: 8px; }
+        .side-nav { background: var(--bg-elevated); border-radius: 8px; padding: 12px 16px; }
+        .brand { color: var(--spotify-green); font-size: 1.4rem; font-weight: 900; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .nav-item { display: flex; align-items: center; gap: 16px; margin: 16px 0; font-weight: 700; cursor: pointer; color: var(--text-subdued); transition: 0.2s; font-size: 0.95rem; }
+        .nav-item:hover, .nav-item.active { color: white; }
+
+        /* Main View Styling */
+        .main-view { 
+            grid-area: main; 
+            background: linear-gradient(to bottom, #1f1f1f, var(--bg-base)); 
+            overflow-y: auto; 
+            border-radius: 8px; 
+            margin: 8px 8px 0 0; 
+            position: relative; 
+            scroll-behavior: smooth;
+        }
+
+        .top-bar { 
+            position: sticky; 
+            top: 0; 
+            height: 64px; 
+            display: flex; 
+            justify-content: flex-end; 
+            align-items: center; 
+            padding: 0 32px; 
+            z-index: 100; 
+            background: rgba(0,0,0,0.4); 
+            backdrop-filter: blur(20px); 
+        }
+
+        .profile-pill { 
+            background: rgba(0,0,0,0.7); 
+            border: none; 
+            color: white; 
+            padding: 4px 12px 4px 4px; 
+            border-radius: 20px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px;
+            font-size: 0.85rem;
+        }
+
+        /* View Sections */
+        .view-section { display: none; padding: 24px 32px; animation: fadeIn 0.4s ease; }
+        .view-section.active { display: block; }
+
+        /* Home Shortcuts */
+        .shortcut-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+        .shortcut-card { 
+            background: rgba(255,255,255,0.1); 
+            border-radius: 4px; 
+            display: flex; 
+            align-items: center; 
+            gap: 16px; 
+            cursor: pointer; 
+            transition: 0.3s; 
+            overflow: hidden; 
+            height: 80px; 
+            font-weight: 700;
+        }
+        .shortcut-card:hover { background: rgba(255,255,255,0.2); }
+        .shortcut-card img { width: 80px; height: 80px; object-fit: cover; }
+
+        /* Search/Memory Page */
+        .search-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 24px; }
+        .search-tile { height: 200px; border-radius: 8px; padding: 16px; font-weight: 900; font-size: 1.5rem; cursor: pointer; transition: 0.2s; overflow: hidden; }
+        .search-tile:hover { transform: translateY(-5px); }
+
+        /* Profile Header Style */
+        .profile-header { display: flex; align-items: flex-end; gap: 24px; padding: 60px 32px 32px; background: linear-gradient(transparent, rgba(0,0,0,0.7)), #404040; }
+        .profile-img-large { width: 232px; height: 232px; background: #ff4d6d; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 6rem; box-shadow: 0 12px 48px rgba(0,0,0,0.5); }
+        .profile-info h1 { font-size: 6rem; margin: 8px 0; letter-spacing: -4px; font-weight: 900; line-height: 1; }
+
+        /* Track Rows */
+        .track-row { display: grid; grid-template-columns: 40px 1fr 1fr; padding: 12px 16px; border-radius: 4px; transition: 0.2s; align-items: center; color: var(--text-subdued); }
+        .track-row:hover { background: rgba(255,255,255,0.1); color: white; }
+        .track-title { color: white; font-weight: 500; }
+
+        /* Lyrics Mode */
+        .lyric-line { font-size: 3rem; font-weight: 900; margin: 48px 0; color: rgba(255,255,255,0.1); transition: 0.4s ease; line-height: 1.1; letter-spacing: -1.5px; }
+        .lyric-line.active { color: #fff; transform: scale(1.03); }
+        .message-box { background: rgba(255,255,255,0.05); padding: 48px; border-radius: 12px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+
+        /* Player Bar Footer */
+        .player-bar { grid-area: player; background: black; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; border-top: 1px solid #282828; }
+        .play-pause-btn { background: white; color: black; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; transition: 0.1s; }
+        .play-pause-btn:hover { transform: scale(1.05); }
+        .progress-bar { flex-grow: 1; height: 4px; background: #4f4f4f; border-radius: 2px; position: relative; cursor: pointer; }
+        .progress-bar:hover #progress-fill { background: var(--spotify-green); }
+        #progress-fill { width: 0%; height: 100%; background: white; border-radius: 2px; }
+
+        /* Login Screen */
+        #login { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #login input { background: #222; border: 1px solid #333; color: white; padding: 16px; border-radius: 8px; text-align: center; font-size: 1.8rem; margin-bottom: 24px; width: 160px; letter-spacing: 8px; }
+        #login button { background: var(--spotify-green); border: none; padding: 14px 40px; border-radius: 50px; font-weight: 900; cursor: pointer; color: white; font-size: 1rem; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div id="login">
+    <div class="brand" style="font-size: 3.5rem; margin-bottom: 30px;">🎧 Cutiedeekufy</div>
+    <input type="password" id="passcode" placeholder="••••" maxlength="4">
+    <button onclick="unlock()">LOG IN</button>
+</div>
+
+<div class="wrapper" id="app" style="display: none;">
+    <aside class="sidebar">
+        <div class="side-nav">
+            <div class="brand"><span>🎧</span> Cutiedeekufy</div>
+            <div class="nav-item active" id="nav-home" onclick="showTab('home')">🏠 Home</div>
+            <div class="nav-item" id="nav-search" onclick="showTab('search')">🔍 Search</div>
+        </div>
+        <div class="side-nav" style="flex-grow: 1;">
+            <p style="color: var(--text-subdued); font-size: 0.75rem; letter-spacing: 1px; margin-bottom: 16px; font-weight: 900;">YOUR LIBRARY</p>
+            <div class="nav-item" onclick="playSong(0)">💖 Pal Pal</div>
+            <div class="nav-item" onclick="playSong(1)">✨ Kun Faya Kun</div>
+        </div>
+    </aside>
+
+    <main class="main-view" id="main-scroll">
+        <div class="top-bar">
+            <button class="profile-pill" onclick="showTab('profile')">
+                <span style="background: #ff4d6d; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 14px;">D</span>
+                Deeksha
+            </button>
+        </div>
+
+        <section id="home-view" class="view-section active">
+            <h1 style="font-size: 2rem; margin-bottom: 24px;">Hello, Babubaby ❤️</h1>
+            <div class="shortcut-grid">
+                <div class="shortcut-card" onclick="playSong(0)">
+                    <img src="https://i.postimg.cc/dQRsvqc0/Screenshot-2026-02-21-at-12-30-49-AM.png">
+                    <span>Pal Pal</span>
+                </div>
+                <div class="shortcut-card" onclick="playSong(1)">
+                    <img src="https://i.postimg.cc/PfP2gMLy/rockstar.jpg">
+                    <span>Kun Faya Kun</span>
+                </div>
+                <div class="shortcut-card" onclick="showTab('profile')">
+                    <div style="width:80px; height:80px; background:#ff4d6d; display:flex; align-items:center; justify-content:center; font-size: 1.5rem;">💖</div>
+                    <span>My Deeksha Profile</span>
+                </div>
+            </div>
+            <h2 style="font-size: 1.5rem;">Made For Deeku</h2>
+            <div style="display: flex; gap: 24px; margin-top: 16px;">
+                <div style="background: #181818; padding: 16px; border-radius: 8px; width: 180px; cursor: pointer; transition: 0.3s;" onmouseover="this.style.backgroundColor='#282828'" onmouseout="this.style.backgroundColor='#181818'" onclick="playSong(0)">
+                    <img src="https://i.postimg.cc/dQRsvqc0/Screenshot-2026-02-21-at-12-30-49-AM.png" style="width:100%; border-radius:4px; margin-bottom:12px; box-shadow: 0 8px 16px rgba(0,0,0,0.5);">
+                    <h4 style="margin:0;">Daily Mix 1</h4>
+                    <p style="color:var(--text-subdued); font-size:0.8rem; margin-top:8px;">The songs that define us.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="search-view" class="view-section">
+            <div id="search-main">
+                <h2 style="margin-bottom: 24px;">Browse Our Memories</h2>
+                <div class="search-grid">
+                    <div class="search-tile" style="background:#E13300;" onclick="openMemory('dec21')">Dec 21st, 2024</div>
+                    <div class="search-tile" style="background:#1E3264;" onclick="openMemory('future')">Future Home</div>
+                    <div class="search-tile" style="background:#8D67AB;" onclick="openMemory('jokes')">Inside Jokes</div>
+                </div>
+            </div>
+            <div id="memory-view" style="display:none;">
+                <button onclick="closeMemory()" style="background:transparent; border:none; color:white; cursor:pointer; font-weight:bold; margin-bottom:20px;">← BACK</button>
+                <div id="memory-content"></div>
+            </div>
+        </section>
+
+        <section id="profile-view" class="view-section" style="padding:0;">
+            <div class="profile-header">
+                <div class="profile-img-large">💖</div>
+                <div class="profile-info">
+                    <p style="font-weight: 900; font-size: 0.75rem;">VERIFIED BABUBABY</p>
+                    <h1>Deeksha</h1>
+                    <div style="font-weight: 700; margin-top: 10px;"> Infinite Love • 1 Soulmate • Most Beautiful Wife</div>
+                </div>
+            </div>
+            <div style="padding: 32px;">
+                <h2 style="margin-bottom: 20px;">Why I Love You (Top Tracks)</h2>
+                <div class="track-row"><span>1</span><span class="track-title">Your Infinite Kindness</span><span>✨ Popular</span></div>
+                <div class="track-row"><span>2</span><span class="track-title">That Smile and your eyes</span><span>🔥 Trending</span></div>
+                <div class="track-row"><span>3</span><span class="track-title">How You Make Me Feel Whole</span><span>💎 Rare</span></div>
+                
+                <div class="message-box" style="margin-top: 48px;">
+                    <h2 style="color: var(--spotify-green); margin-top:0;">About the Artist</h2>
+                    <p style="font-size: 1.3rem; line-height: 1.6;">Deeksha, you are the most special part of my existence.Baby no matter where we go or what we do you are the main character in my story. I love you more than words, code, or  any songs could ever express. ❤️</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="player-view" class="view-section">
+            <div id="story-ui">
+                <div class="message-box">
+                    <h1 id="story-title" style="margin-top:0"></h1>
+                    <div id="story-text" style="font-size: 1.4rem; line-height: 1.6;"></div>
+                    <button style="background:var(--spotify-green); border:none; padding:14px 40px; border-radius:50px; font-weight:900; cursor:pointer; margin-top:30px; color:white;" onclick="nextStory()">NEXT PAGE →</button>
+                </div>
+            </div>
+            <div id="lyrics-ui" style="display:none; padding-bottom: 200px;">
+                <img id="l-art" class="lyrics-header-art" src="" style="width: 280px; border-radius: 8px; margin-bottom: 24px;">
+                <h1 id="l-song" style="font-size: 3.5rem; margin:0; font-weight:900;"></h1>
+                <p id="l-artist" style="color: var(--text-subdued); font-size: 1.5rem; margin-bottom: 40px;"></p>
+                <div id="l-container"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="player-bar">
+        <div style="display:flex; align-items:center; gap:16px; width:30%;">
+            <img id="p-art" src="" style="width:56px; height:56px; border-radius:4px; display:none;">
+            <div>
+                <div id="p-title" style="font-weight:700; font-size:0.9rem;"></div>
+                <div id="p-artist" style="font-size:0.75rem; color:var(--text-subdued);"></div>
+            </div>
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:center; gap:8px; width:40%;">
+            <button class="play-pause-btn" id="playBtn" onclick="togglePlay()">⏸</button>
+            <div style="width:100%; display:flex; align-items:center; gap:12px; color:var(--text-subdued); font-size:0.7rem; font-weight:700;">
+                <span id="curr-time">0:00</span>
+                <div class="progress-bar" onclick="seek(event)"><div id="progress-fill"></div></div>
+                <span id="total-time">0:00</span>
+            </div>
+        </div>
+        <div style="width:30%; text-align:right; font-size: 1rem;">🔊</div>
+    </footer>
+</div>
+
+<audio id="music" loop></audio>
+
+<script>
+    const START_DATE = new Date(2024, 11, 21);
+    let curSong = -1, sIdx = 0;
+
+    const playlist = [
+        {
+            title: "Pal Pal", artist: "Afusic x Talwiinder", art: "https://i.postimg.cc/dQRsvqc0/Screenshot-2026-02-21-at-12-30-49-AM.png",
+            url: "https://www.dropbox.com/scl/fi/o67p5sbwt8ci1dbgd7uy3/Afusic-Pal-Pal-with-Talwiinder-Official-Visualiser-Prod.-AliSoomroMusic.mp3?rlkey=v2i89q36cqdwuj79zvxuxvvtl&st=tymygqnl&raw=1",
+            stories: [
+                { t: "Hi Beautiful! ❤️", b: "We've been together for: <br><span id='live-timer' style='color:#1DB954; font-size:2.5rem; font-weight:900;'></span>" },
+                { t: "The Beginning", b: "Dec 21, 2024. The day the world finally made sense to me." },
+                { t: "Every Laugh", b: "Your laugh is my absolute favorite sound in the world." },
+                { t: "Why You?", b: "Because you are my soulmate, my best friend, mybabubaby and my wife." },
+                { t: "Our Future", b: "I am so excited for all the fun we will have together." },
+                { t: "My Promise", b: "I will always be your yathubaby, cheering you on." },
+                { t: "Always You", b: "You are the best part of every single day." },
+                { t: "Soulmates", b: "Meeting you was like finding the part of me I did not  know was missing." },
+                { t: "Our Song", b: "I love you sssssmmmmm. Now, sink into our song. ❤️" }
+            ],
+            lyrics: [
+                { t: 8.2, l: "Tera mera afsana..." }, { t: 13.0, l: "Poora hua na jaana..." },
+                { t: 15.8, l: "Pal pal jeena mukhaal mera tere bina" }, { t: 19.8, l: "Ye saare nashe bekaar..." },
+                { t: 22.8, l: "Teri aankhon ke siva..." }, { t: 25.8, l: "Nahi jata main baahar" },
+                { t: 28.8, l: "Rehta tera intezaar..." }, { t: 37.0, l: "Main ab kyun hosh mein aata nahi" },
+                { t: 40.2, l: "Sukoon ye dil kyun paata nahi" }, { t: 53.8, l: "Meri jaan na lele..." },
+                { t: 60.2, l: "Meri jaan kya kehne!" }
+            ]
+        },
+        {
+            title: "Kun Faya Kun", artist: "A.R. Rahman", art: "https://i.postimg.cc/PfP2gMLy/rockstar.jpg",
+            url: "https://www.dropbox.com/scl/fi/sg95pftc8te38pwemz9h1/Kun-Faya-Kun-Full-Video-Song-Rockstar-Ranbir-Kapoor-A.R.-Rahman-Javed-Ali-Mohit-Chauhan.mp3?rlkey=lcq2av5sc898jnrbt9uu9pysd&st=ls9mydk2&raw=1",
+            stories: [{ t: "Pure love", b: "This song represents the happiness you bring into my life." }],
+            lyrics: [
+                { t: 55, l: "Kun faya kun... Kun faya kun..." }, { t: 67, l: "Jab kahin pe kuch nahi tha..." },
+                { t: 78, l: "Wahi tha, wahi tha..." }, { t: 115, l: "Tera mujh mein, mera tujh mein..." }
+            ]
+        }
+    ];
+
+    const memories = {
+        dec21: { title: "Dec 21st, 2024", color: "#E13300", items: ["The day we became 'Us'", "Our first day together", "When my heart knew first", "The start of our forever"] },
+        future: { title: "Our Future Home", color: "#1E3264", items: ["Midnight kitchen dances(dances fs)", "Decorating our space together", "Our morning waffle", "Traveling the world as husband anddd wife"] },
+        jokes: { title: "Inside Jokes", color: "#8D67AB", items: ["Babubaby Egg", "Guess who bro kissed in dreams", "Gadhiiii", "Bro cried cause i wont be with in 90 years awwww"] }
+    };
+
+    function unlock() {
+        if(document.getElementById('passcode').value === "2112") {
+            document.getElementById('login').style.display='none';
+            document.getElementById('app').style.display='grid';
+            setInterval(updateUI, 100);
+        } else { alert("Try 2112, babubaby! ❤️"); }
+    }
+
+    function showTab(id) {
+        document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+        document.getElementById(id + '-view').classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        if(document.getElementById('nav-'+id)) document.getElementById('nav-'+id).classList.add('active');
+        if(id !== 'search') closeMemory();
+    }
+
+    function openMemory(key) {
+        const m = memories[key];
+        const content = document.getElementById('memory-content');
+        content.innerHTML = `<div style="padding:40px; background:linear-gradient(${m.color}, transparent); border-radius:8px;">
+            <h1 style="font-size:4rem; margin:0;">${m.title}</h1><p>A playlist of our favorite moments</p></div>
+            <div style="margin-top:24px;">${m.items.map((it, i) => `<div class="track-row"><span>${i+1}</span><span class="track-title">${it}</span><span>Memory</span></div>`).join('')}</div>`;
+        document.getElementById('search-main').style.display = 'none';
+        document.getElementById('memory-view').style.display = 'block';
+    }
+
+    function closeMemory() {
+        document.getElementById('search-main').style.display = 'block';
+        document.getElementById('memory-view').style.display = 'none';
+    }
+
+    function playSong(i) {
+        curSong = i; sIdx = 0;
+        const s = playlist[i];
+        const m = document.getElementById('music');
+        m.src = s.url; m.play();
+        
+        document.getElementById('p-art').src = s.art;
+        document.getElementById('p-art').style.display = 'block';
+        document.getElementById('p-title').innerText = s.title;
+        document.getElementById('p-artist').innerText = s.artist;
+        
+        document.getElementById('l-art').src = s.art;
+        document.getElementById('l-song').innerText = s.title;
+        document.getElementById('l-artist').innerText = s.artist;
+        
+        showTab('player');
+        document.getElementById('story-ui').style.display = 'block';
+        document.getElementById('lyrics-ui').style.display = 'none';
+        nextStory();
+        renderLyrics(s.lyrics);
+    }
+
+    function nextStory() {
+        const s = playlist[curSong];
+        if(sIdx < s.stories.length) {
+            document.getElementById('story-title').innerText = s.stories[sIdx].t;
+            document.getElementById('story-text').innerHTML = s.stories[sIdx].b;
+            sIdx++;
+        } else {
+            document.getElementById('story-ui').style.display = 'none';
+            document.getElementById('lyrics-ui').style.display = 'block';
+        }
+    }
+
+    function renderLyrics(l) {
+        const container = document.getElementById('l-container');
+        container.innerHTML = '';
+        l.forEach((ln, i) => {
+            const p = document.createElement('p');
+            p.className = 'lyric-line'; p.id = `ln-${i}`; p.innerText = ln.l;
+            container.appendChild(p);
+        });
+    }
+
+    function togglePlay() {
+        const m = document.getElementById('music');
+        if (m.paused) { m.play(); document.getElementById('playBtn').innerText = "⏸"; } 
+        else { m.pause(); document.getElementById('playBtn').innerText = "▶"; }
+    }
+
+    function updateUI() {
+        const m = document.getElementById('music');
+        if(!m.src) return;
+        document.getElementById('progress-fill').style.width = (m.currentTime/m.duration)*100 + "%";
+        document.getElementById('curr-time').innerText = formatTime(m.currentTime);
+        document.getElementById('total-time').innerText = formatTime(m.duration);
+        
+        const s = playlist[curSong];
+        if(s && s.lyrics) {
+            s.lyrics.forEach((ln, i) => {
+                const el = document.getElementById(`ln-${i}`);
+                if(el && m.currentTime >= ln.t && (i === s.lyrics.length-1 || m.currentTime < s.lyrics[i+1].t)) {
+                    el.classList.add('active');
+                    if(document.getElementById('lyrics-ui').style.display === 'block') el.scrollIntoView({behavior:'smooth', block:'center'});
+                } else if(el) el.classList.remove('active');
+            });
+        }
+        
+        const diff = new Date() - START_DATE;
+        const d = Math.floor(diff / 86400000), h = Math.floor((diff % 86400000) / 3600000), mt = Math.floor((diff % 3600000) / 60000), st = Math.floor((diff % 60000) / 1000);
+        const tEl = document.getElementById('live-timer');
+        if(tEl) tEl.innerText = `${d}d ${h}h ${mt}m ${st}s`;
+    }
+
+    function formatTime(s) {
+        const min = Math.floor(s/60), sec = Math.floor(s%60);
+        return `${min}:${sec < 10 ? '0' : ''}${sec}`;
+    }
+
+    function seek(e) {
+        const m = document.getElementById('music');
+        const rect = e.currentTarget.getBoundingClientRect();
+        m.currentTime = ((e.clientX - rect.left) / rect.width) * m.duration;
+    }
+</script>
+</body>
+</html>
